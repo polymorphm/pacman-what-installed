@@ -99,8 +99,11 @@ def get_info_ctx(group_list):
 def show_info_ctx(info_ctx):
     print('explicit installed:')
     
-    for pkg in info_ctx.query_explicit_list:
-        print('{}{}'.format(' ' * 4, pkg))
+    if info_ctx.query_explicit_list:
+        for pkg in info_ctx.query_explicit_list:
+            print('{}{}'.format(' ' * 4, pkg))
+    else:
+        print('{}(none)'.format(' ' * 4))
     
     for group in info_ctx.group_list:
         if not info_ctx.query_group_map[group] and not info_ctx.sync_group_map[group]:
