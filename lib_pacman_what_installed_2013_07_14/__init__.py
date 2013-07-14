@@ -106,7 +106,7 @@ def show_info_ctx(info_ctx):
         if not info_ctx.query_group_map[group] and not info_ctx.sync_group_map[group]:
             continue
         
-        print('\ngroup {}:'.format(group))
+        print('\n{} group:'.format(group))
         
         for pkg in info_ctx.query_group_map[group]:
             print('{}{}'.format(' ' * 4, pkg))
