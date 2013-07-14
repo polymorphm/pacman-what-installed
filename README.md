@@ -69,7 +69,7 @@ Usage Example
         xf86-input-synaptics
         xf86-video-intel
     
-    group base:
+    base group:
         bash
         bzip2
         coreutils
@@ -122,7 +122,7 @@ Usage Example
         which
         xfsprogs
     
-    group base-devel:
+    base-devel group:
         autoconf
         automake
         binutils
@@ -149,7 +149,7 @@ Usage Example
         util-linux
         which
     
-    group gnome:
+    gnome group:
         baobab
         empathy
         eog
@@ -188,7 +188,7 @@ Usage Example
         xdg-user-dirs-gtk
         yelp
     
-    group gnome-extra:
+    gnome-extra group:
         accerciser
         aisleriot
         anjuta
@@ -225,7 +225,7 @@ Usage Example
         tali
         vinagre
     
-    group libreoffice:
+    libreoffice group:
         libreoffice-base
         libreoffice-calc
         libreoffice-common
