@@ -14,6 +14,8 @@ Status
 Usage Example
 -------------
 
+typical usage:
+
     $ vim ~/Desktop/my_installed_groups
     
     $ cat ~/Desktop/my_installed_groups
@@ -238,3 +240,8 @@ Usage Example
         libreoffice-postgresql-connector [not installed for this group]
         libreoffice-sdk [not installed for this group]
         libreoffice-sdk-doc [not installed for this group]
+
+But see next:
+
+    $ pacman -Qi xf86-input-synaptics | grep -i groups
+    Groups         : xorg-drivers  xorg
