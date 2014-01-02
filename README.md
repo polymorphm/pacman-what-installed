@@ -245,3 +245,19 @@ But see next:
 
     $ pacman -Qi xf86-input-synaptics | grep -i groups
     Groups         : xorg-drivers  xorg
+
+Example With Fake Groups
+-------------
+
+Next example will show how to using two "fake" groups (``my-python-devel`` and ``my-python-devel``)
+
+    $ nano ~/Desktop/my_installed_groups
+    
+    $ cat ~/Desktop/my_installed_groups
+    base
+    base-devel
+    fake: my-cpp-devel: nano gcc make
+    fake: my-python-devel: nano python
+    gnome
+    gnome-extra
+    libreoffice
