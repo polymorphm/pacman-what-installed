@@ -20,6 +20,7 @@ assert str is not bytes
 import argparse, shlex, subprocess
 
 PACMAN_QUERY_EXPLICIT_CMD = tuple(shlex.split('pacman -Qqe'))
+PACMAN_QUERY_IMPLICIT_CMD = tuple(shlex.split('pacman -Qq'))
 PACMAN_QUERY_GROUP_CMD = tuple(shlex.split('pacman -Qqg'))
 PACMAN_SYNC_GROUP_CMD = tuple(shlex.split('pacman -Sqg'))
 
@@ -42,21 +43,57 @@ def read_group_list(path):
             if not line or line.startswith('#'):
                 continue
             
-            if line in group_list:
-                raise ReadGroupListError('duplication of group name {!r}'.format(line))
+            line_split = line.split(sep=':', maxsplit=1)
+            if len(line_split) == 2:
+                line_left = line_split[0].strip()
+                line_right = line_split[1].strip()
+                
+                if line_left == 'fake':
+                    line_right_split = line_right.split(sep=':', maxsplit=1)
+                    if len(line_right_split) != 2:
+                        raise ReadGroupListError('invalid fake group line format {!r}'.format(line))
+                    
+                    group_name = line_right_split[0].strip()
+                    group_pkg_list = line_right_split[1].split()
+                    group = 'fake', group_name, tuple(group_pkg_list)
+                else:
+                    raise ReadGroupListError('unknown group line format {!r}'.format(line))
+            else:
+                group = line
             
-            group_list.append(line)
+            if group in group_list:
+                raise ReadGroupListError('duplication of group {!r}'.format(line))
+            
+            group_list.append(group)
     
     return tuple(group_list)
 
-def get_pkg_list(cmd, arg=None):
+def get_pkg_list(cmd, arg=None, ignore_process_error=None):
     assert isinstance(cmd, tuple)
-    assert arg is None or isinstance(arg, str)
+    assert arg is None or isinstance(arg, (str, tuple, list))
     
     if arg is not None:
-        cmd += (arg,)
+        if isinstance(arg, str):
+            cmd += arg,
+        elif isinstance(arg, (tuple, list)):
+            cmd += arg
+        else:
+            assert False
     
-    raw_result = subprocess.check_output(cmd)
+    if ignore_process_error is None:
+        ignore_process_error = False
+    
+    subprocess_stderr = subprocess.DEVNULL if ignore_process_error else None
+    try:
+        raw_result = subprocess.check_output(cmd, stderr=subprocess_stderr)
+    except subprocess.CalledProcessError as e:
+        if ignore_process_error:
+            raw_result = e.output
+        else:
+            raise
+    if not isinstance(raw_result, bytes):
+        raw_result = b''
+    
     pkg_list = []
     
     for raw_word in raw_result.split():
@@ -78,8 +115,28 @@ def get_info_ctx(group_list):
     info_ctx.query_group_map = {}
     info_ctx.sync_group_map = {}
     for group in info_ctx.group_list:
-        query_list = get_pkg_list(PACMAN_QUERY_GROUP_CMD, arg=group)
-        sync_list = list(get_pkg_list(PACMAN_SYNC_GROUP_CMD, arg=group))
+        if isinstance(group, (tuple, list)) and \
+                len(group) == 3 and group[0] == 'fake':
+            assert isinstance(group[2], (tuple, list))
+            sync_list = list(group[2])
+            if group[2]:
+                # XXX need not empty list for PACMAN_QUERY_IMPLICIT_CMD
+                query_list = get_pkg_list(
+                        PACMAN_QUERY_IMPLICIT_CMD,
+                        arg=group[2],
+                        ignore_process_error=True,
+                        )
+            else:
+                query_list = ()
+        elif isinstance(group, str):
+            sync_list = list(get_pkg_list(PACMAN_SYNC_GROUP_CMD, arg=group))
+            query_list = get_pkg_list(
+                    PACMAN_QUERY_GROUP_CMD,
+                    arg=group,
+                    ignore_process_error=True,
+                    )
+        else:
+            raise NotImplementedError('unknown group format')
         
         for pkg in query_list:
             if pkg in query_explicit_list:
@@ -89,7 +146,7 @@ def get_info_ctx(group_list):
             if pkg in query_list:
                 sync_list.remove(pkg)
         
-        info_ctx.query_group_map[group] = query_list
+        info_ctx.query_group_map[group] = tuple(query_list)
         info_ctx.sync_group_map[group] = tuple(sync_list)
     
     info_ctx.query_explicit_list = tuple(query_explicit_list)
@@ -109,7 +166,13 @@ def show_info_ctx(info_ctx):
         if not info_ctx.query_group_map[group] and not info_ctx.sync_group_map[group]:
             continue
         
-        print('\n{} group:'.format(group))
+        if isinstance(group, (tuple, list)) and \
+                len(group) == 3 and group[0] == 'fake':
+            print('\n{} fake group:'.format(group[1]))
+        elif isinstance(group, str):
+            print('\n{} group:'.format(group))
+        else:
+            raise NotImplementedError('unknown group format')
         
         for pkg in info_ctx.query_group_map[group]:
             print('{}{}'.format(' ' * 4, pkg))
