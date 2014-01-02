@@ -16,7 +16,7 @@ Usage Example
 
 typical usage:
 
-    $ vim ~/Desktop/my_installed_groups
+    $ nano ~/Desktop/my_installed_groups
     
     $ cat ~/Desktop/my_installed_groups
     base
@@ -65,7 +65,6 @@ typical usage:
         telepathy-rakia
         transmission-gtk
         unrar
-        vim
         wget
         wpa_supplicant
         xf86-input-synaptics
