@@ -9,7 +9,7 @@ It is wrapper over tool ``pacman``.
 Status
 ------
 
-Developer version (git master).
+Beta version (0.3).
 
 Usage Example
 -------------
